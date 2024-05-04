@@ -1,80 +1,71 @@
+import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SweetAlert } from "../utils/Alert";
-import axios from "axios";
 
-export const SignUp = () => {
+export const SignIn = () => {
   const backgroundImageURL = "https://source.unsplash.com/Mv9hjnEUHR4/600x800";
   const inputRef = useRef();
-  const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState();
   const [userInfo, setUserInfo] = useState({
-    username: "",
     email: "",
     password: "",
-    c_password: "",
   });
-  const navigate = useNavigate();
-
   useEffect(() => {
     const token = localStorage.getItem("file_token");
     if (token) {
       navigate("/");
     }
   }, []);
-
-  const handleChange = (event) => {
-    setUserInfo((prevUserInfo) => {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const handleUserInfo = (event) => {
+    setUserInfo((prev) => {
       return {
-        ...prevUserInfo,
+        ...prev,
         [event.target.id]: event.target.value,
       };
     });
   };
-  const signUpUser = async (data) => {
-    try {
-      setLoading(true);
-      await axios
-        .post("http://localhost:8080/api/user/sign-up", data)
-        .then((res) => {
-          if (res.status === 200) {
-            SweetAlert("success", `User signed up successfully`, 2500).then(
-              () => navigate("/sign-in")
-            );
-          }
-        })
-        .then(() => setLoading(false));
-    } catch (error) {
-      setLoading(false);
-      console.log("error===>", error?.response?.data?.errorMessage);
-      SweetAlert("error", `${error?.response?.data?.errorMessage}`, 2500);
-    }
-  };
-  const handleFormSubmit = (event) => {
-    event.preventDefault();
-    const { password, c_password, username, email } = userInfo;
-    if (password === "" || email === "" || username === "") {
-      SweetAlert("error", "No field should be empty", 2500);
-    } else if (password !== c_password) {
-      SweetAlert("error", "Passwords do not match", 2500);
-    } else {
-      const user = {
-        user_name: username,
-        password: password,
-        email: email,
-      };
-      signUpUser(user);
-    }
-  };
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
-
+    console.log("Selected File:", selectedFile);
     setFile(selectedFile);
   };
 
   const handleButtonClick = () => {
     if (inputRef.current) {
       inputRef.current.click();
+    }
+  };
+
+  const handleFormSubmit = (event) => {
+    event.preventDefault();
+    if (userInfo.email === "" || userInfo.password === "") {
+      SweetAlert("error", "No field should be empty", 2500);
+    } else {
+      try {
+        setLoading(true);
+        axios
+          .post("http://localhost:8080/api/user/sign-in", userInfo)
+          .then((res) => {
+            setLoading(false);
+            if (res.status === 200) {
+              navigate("/");
+              const token = res.data.token;
+              localStorage.setItem("file_token", token);
+            }
+          })
+          .catch((error) => {
+            setLoading(false);
+            console.log(error);
+            SweetAlert("error", error?.response?.data?.message, 2500);
+          });
+      } catch (error) {
+        setLoading(false);
+        console.log(error);
+        SweetAlert("error", error?.response?.data?.message, 2500);
+      }
     }
   };
   const singUpByExcel = async () => {
@@ -86,7 +77,7 @@ export const SignUp = () => {
         formData.append("file", file);
         await axios
           .post(
-            "http://localhost:8080/api/user/sign-up-via-excel",
+            "http://localhost:8080/api/user/sign-in-via-excel",
             formData,
 
             {
@@ -95,7 +86,11 @@ export const SignUp = () => {
               },
             }
           )
-          .then(() => navigate("/sign-in"))
+          .then((res) => {
+            const token = res.data.token;
+            localStorage.setItem("file_token", token);
+          })
+          .then(() => navigate("/"))
           .then((res) => setFile(null));
       } catch (error) {
         console.log(error);
@@ -103,9 +98,11 @@ export const SignUp = () => {
       }
     }
   };
-
   return (
-    <div className="h-full bg-gray-400 rounded-md dark:bg-gray-900 border">
+    <div
+      onSubmit={handleFormSubmit}
+      className="h-full bg-gray-400 rounded-md dark:bg-gray-900 border"
+    >
       <div className="mx-auto">
         <div className="flex justify-center px-6 py-7">
           <div className="w-full xl:w-3/4 lg:w-11/12 flex">
@@ -116,47 +113,11 @@ export const SignUp = () => {
 
             <div className="w-full lg:w-7/12 bg-white dark:bg-gray-700 p-5 rounded-lg lg:rounded-l-none">
               <h3 className="py-4 text-2xl text-center text-gray-800 dark:text-white">
-                Create an Account!
+                Log in Here !
               </h3>
-              <form
-                onSubmit={handleFormSubmit}
-                className="px-8 pt-6 pb-8 mb-4 bg-white dark:bg-gray-800 rounded"
-              >
-                <div className="mb-4 md:flex md:justify-between">
-                  <div className="mb-4 md:mr-2 md:mb-0">
-                    <label
-                      className="block mb-2 text-sm font-bold text-gray-700 dark:text-white"
-                      htmlFor="username"
-                    >
-                      First Name
-                    </label>
-                    <input
-                      className="w-full px-3 py-2 text-sm leading-tight text-gray-700 dark:text-white border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-                      id="username"
-                      type="text"
-                      value={userInfo.username}
-                      onChange={handleChange}
-                      placeholder="First Name"
-                      autoComplete="off"
-                    />
-                  </div>
-                  <div className="md:ml-2">
-                    <label
-                      className="block mb-2 text-sm font-bold text-gray-700 dark:text-white"
-                      htmlFor="lastName"
-                    >
-                      Last Name
-                    </label>
-                    <input
-                      className="w-full px-3 py-2 text-sm leading-tight text-gray-700 dark:text-white border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-                      id="lastName"
-                      type="text"
-                      placeholder="Last Name"
-                      autoComplete="off"
-                    />
-                  </div>
-                </div>
+              <form className="px-8 pt-6 pb-8 mb-4 bg-white dark:bg-gray-800 rounded">
                 <div className="mb-4">
+                  <div className="mb-4"></div>
                   <label
                     className="block mb-2 text-sm font-bold text-gray-700 dark:text-white"
                     htmlFor="email"
@@ -168,53 +129,34 @@ export const SignUp = () => {
                     id="email"
                     type="email"
                     placeholder="Email"
-                    value={userInfo.email}
-                    onChange={handleChange}
                     autoComplete="off"
+                    value={userInfo.email}
+                    onChange={handleUserInfo}
                   />
                 </div>
-                <div className="mb-4 md:flex md:justify-between">
-                  <div className="mb-4 md:mr-2 md:mb-0">
-                    <label
-                      className="block mb-2 text-sm font-bold text-gray-700 dark:text-white"
-                      htmlFor="password"
-                    >
-                      Password
-                    </label>
-                    <input
-                      className="w-full px-3 py-2 mb-3 text-sm leading-tight text-gray-700 dark:text-white border border-red-500 rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-                      id="password"
-                      type="password"
-                      placeholder="******************"
-                      value={userInfo.password}
-                      onChange={handleChange}
-                      autoComplete="off"
-                    />
-                  </div>
-                  <div className="md:ml-2">
-                    <label
-                      className="block mb-2 text-sm font-bold text-gray-700 dark:text-white"
-                      htmlFor="c_password"
-                    >
-                      Confirm Password
-                    </label>
-                    <input
-                      className="w-full px-3 py-2 mb-3 text-sm leading-tight text-gray-700 dark:text-white border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-                      id="c_password"
-                      type="password"
-                      value={userInfo.c_password}
-                      onChange={handleChange}
-                      placeholder="******************"
-                      autoComplete="off"
-                    />
-                  </div>
+                <div className="mb-4">
+                  <label
+                    className="block mb-2 text-sm font-bold text-gray-700 dark:text-white"
+                    htmlFor="password"
+                  >
+                    Password
+                  </label>
+                  <input
+                    className="w-full px-3 py-2 mb-3 text-sm leading-tight text-gray-700 dark:text-white border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
+                    id="password"
+                    type="password"
+                    placeholder="***********"
+                    value={userInfo.password}
+                    onChange={handleUserInfo}
+                  />
                 </div>
+
                 <div className="mb-6 text-center">
                   <button
                     className="w-full px-4 py-2 font-bold text-white bg-blue-500 rounded-full hover:bg-blue-700 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-900 focus:outline-none focus:shadow-outline"
                     type="submit"
                   >
-                    {loading ? <span>Loading...</span> : "Register Account"}
+                    {loading ? "Loading...!" : "Submit"}
                   </button>
                 </div>
 
@@ -228,13 +170,13 @@ export const SignUp = () => {
                   </a>
                 </div>
                 <div className="text-center">
-                  <span className="inline-block text-sm text-blue-500 dark:text-blue-500 align-baseline hover:text-blue-800">
-                    Already have an account?{" "}
+                  <span className="inline-block text-sm text-blue-500 dark:text-blue-500 align-baseline ">
+                    Don't have an account yet ?{" "}
                     <Link
                       className="hover:underline font-semibold"
-                      to={"/sign-in"}
+                      to={"/sign-up"}
                     >
-                      Login!
+                      Sing Up
                     </Link>
                   </span>
                 </div>
@@ -252,7 +194,7 @@ export const SignUp = () => {
                     onClick={handleButtonClick}
                     className="w-full px-4 py-2 font-bold text-white bg-teal-700 rounded-full hover:bg-blue-700 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-900 focus:outline-none focus:shadow-outline"
                   >
-                    SignUp using Excel file
+                    SignIn using Excel file
                   </button>
                 ) : (
                   <div className="flex flex-col space-y-4">
