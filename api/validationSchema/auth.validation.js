@@ -33,16 +33,17 @@ const schemas = {
       .messages({ "any.required": "please provide a validate email address" }),
 
     password: Joi.string()
-      .pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{6,30}$"))
+      // .pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{6,30}$"))
       .min(6)
-      .required()
-      .messages({
-        "string.pattern.base":
-          "Password must contain at least 1 lowercase, 1 uppercase, 1 number and 1 special character.",
-        "string.min": "Password must be at least 6 digits",
-        "string.empty": "Password cannot be empty",
-        "any.required": "Password is required",
-      }),
+      .message("min six characters required")
+      .required("password is required"),
+    // .messages({
+    //   "string.pattern.base":
+    //     "Password must contain at least 1 lowercase, 1 uppercase, 1 number and 1 special character.",
+    //   "string.min": "Password must be at least 6 digits",
+    //   "string.empty": "Password cannot be empty",
+    //   "any.required": "Password is required",
+    // }),
   }),
   logInSchema: Joi.object().keys({
     email: Joi.string()

@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt");
 const db = require("../config/dbConfig");
 module.exports = {
   SignUpUser: async (userInfo) => {
-    console.log(userInfo);
+   console.log(userInfo)
     return new Promise(async (resolve, reject) => {
       try {
         // Check if the user already exists
@@ -13,7 +13,7 @@ module.exports = {
 
         if (existingUser.rows.length > 0) {
           throw new Error(
-            "User already exists with phone number or email address"
+            "User already exists with this email address"
           );
         }
 
@@ -34,7 +34,8 @@ module.exports = {
     });
   },
   logInUser: async (email, password) => {
-    console.log(email, password);
+
+   
     return new Promise(async (resolve, reject) => {
       try {
         const userExists = await db.query(
@@ -48,11 +49,12 @@ module.exports = {
 
         // Compare the hashed password with the provided password using bcrypt.compare
         const isPasswordMatch = await bcrypt.compare(
-          password,
+          typeof password === "number" ? String(password) : password,
           userExists.rows[0].password
         );
 
         // If passwords match, resolve with the user details
+
         if (isPasswordMatch) {
           resolve(userExists.rows[0]);
         } else {
