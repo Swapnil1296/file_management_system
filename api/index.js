@@ -4,20 +4,23 @@ const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const client = require("./config/dbConfig");
 const getUserRouter = require("./routers/user.routes");
+const uploadFilesRouter = require("./routers/file.routes");
 
 dotenv.config();
 const port = process.env.PORT;
 const app = express();
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "*",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
 app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/user", getUserRouter);
+app.use("/file", uploadFilesRouter);
 
 app.listen(port, function (err) {
   if (err) {

@@ -7,6 +7,7 @@ const db = require("../config/dbConfig");
 
 module.exports = {
   SignUpUser: async (req, res, next) => {
+    console.log(req);
     try {
       const { user_name, email, password } = req.body;
       // Hash the password
@@ -121,9 +122,11 @@ module.exports = {
     }
   },
   SignUpViaExcel: async (req, res, next) => {
+    
     try {
-      const workbook = xlsx.readFile(req.file.path);
-
+     console.log(req.file);
+     const workbook = xlsx.readFile(req.file.path);
+      
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const data = xlsx.utils.sheet_to_json(sheet);
