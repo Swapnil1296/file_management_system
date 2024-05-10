@@ -23,6 +23,9 @@ module.exports = {
       if (userExists.status !== "success") {
         return res.status(400).json({ message: "Invalid User" });
       }
+      if (!req.file) {
+        return res.status(501).json({ message: "No file uploaded" });
+      }
 
       const dateTime = giveCurrentDateTime();
       const storage = getStorage();
