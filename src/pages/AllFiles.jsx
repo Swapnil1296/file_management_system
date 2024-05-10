@@ -1,7 +1,12 @@
 import React from "react";
+import Table from "../components/Table";
 
 const AllFiles = () => {
-  return <div>AllFiles</div>;
+  return (
+    <div className="m-8 ">
+      <Table />
+    </div>
+  );
 };
 
 export default AllFiles;

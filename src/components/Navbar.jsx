@@ -1,19 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { SignIn } from "./../pages/SignIn";
 
 const Navbar = () => {
   const [isUser, setIsUser] = useState(false);
-  const token = localStorage.getItem("file_token");
 
+  const removeTokenFromLocal = () => {
+    localStorage.removeItem("file_token");
+    setIsUser(true);
+    navigate("/sign-in");
+  };
   useEffect(() => {
-    if (token && token !== null && token !== undefined) {
+    const token = localStorage.getItem("file_token");
+    if (!token) {
+      navigate("/sign-in");
       setIsUser(true);
     } else {
       setIsUser(false);
       return;
     }
-  }, [token]);
-
+  }, [isUser]);
   const navigate = useNavigate();
   const location = useLocation();
   const currentUrl = location.pathname;
@@ -101,12 +107,11 @@ const Navbar = () => {
               />
             </svg>
             {isUser ? (
-              <span onClick={() => localStorage.removeItem("file_token")}>
-                LogOut
-              </span>
-            ) : (
               <Link to={"/sign-in"}>Login</Link>
+            ) : (
+              <span onClick={() => removeTokenFromLocal()}>LogOut</span>
             )}
+            {/* <Link to={"/sign-in"}>Login</Link> */}
           </button>
         </div>
       </div>
