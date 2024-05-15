@@ -3,6 +3,7 @@ const {
   uploadBytesResumable,
   ref,
   getStorage,
+  deleteObject,
 } = require("firebase/storage");
 const db = require("../config/dbConfig");
 const errorHandler = require("../helpers/errorHandler");
@@ -11,6 +12,7 @@ const {
   AddFiles,
   GetFileNameToDownload,
   getUserUploadedFiles,
+  getTotalFileCount,
 } = require("../models/files.models");
 const giveCurrentDateTime = require("../helpers/CurrentDate");
 
@@ -80,7 +82,7 @@ module.exports = {
 
       const { file_id } = req.params;
       const result = await GetFileNameToDownload(String(file_id), userId);
-      console.log("results:==>", result.firebase_link);
+
       const storage = getStorage();
       const starsRef = ref(storage, `files/${result.firebase_link}`);
       const downloadURL = await getDownloadURL(starsRef);
@@ -98,14 +100,65 @@ module.exports = {
   getUserUploadedFiles: async (req, res, next) => {
     try {
       const { email, userId } = req.user;
-      const { user_id } = req.params;
+      const { user_id, page = 1 } = req.params;
+      const { pageSize = 3 } = req.query; // Default to page size of 3 if not provided
+
       if (user_id !== userId) {
         next(errorHandler(401, "Unauthorized access"));
+        return; // Return early to prevent further execution
       }
-      const getFiles = await getUserUploadedFiles(user_id);
-      res.status(200).json({ message: "success", files: getFiles });
+
+      // Calculate the offset based on page number and page size for pagination
+      const offset = (page - 1) * pageSize;
+
+      // Call your function to get user uploaded files with pagination
+      const getFiles = await getUserUploadedFiles(user_id, offset, pageSize);
+
+      // Get total count of files for the user
+      const totalCount = await getTotalFileCount(user_id);
+
+      // Calculate total number of pages
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      res.status(200).json({ message: "success", files: getFiles, totalPages });
     } catch (error) {
       console.log("Error in getUserUploadedFiles:", error);
+      next(errorHandler(501, error.message || "Internal server error"));
+    }
+  },
+
+  DeleteFiles: async (req, res, next) => {
+    try {
+      const { email, userId } = req.user;
+      const userExists = await verifyUser(email, userId);
+
+      if (userExists.status !== "success") {
+        return res.status(400).json({ message: "Invalid User" });
+      }
+
+      const { fileId } = req.params;
+      if (!fileId) {
+        throw new Error("file id is required");
+      }
+
+      const result = await GetFileNameToDownload(fileId, userId);
+
+      const storage = getStorage();
+      const desertRef = ref(storage, `files/${result.firebase_link}`);
+      deleteObject(desertRef)
+        .then(async () => {
+          const x = await db.query("DELETE FROM files WHERE id = $1", [fileId]);
+          console.log(x);
+          res
+            .status(200)
+            .json({ message: "File deleted successfully", status: 200 });
+        })
+        .catch((error) => {
+          console.log("error while in DeleteFiles:===>", error);
+          next(errorHandler(501, error.message || "Internal server error"));
+        });
+    } catch (error) {
+      console.log("error while in DeleteFiles:===>", error);
       next(errorHandler(501, error.message || "Internal server error"));
     }
   },

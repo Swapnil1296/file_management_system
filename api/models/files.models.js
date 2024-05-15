@@ -33,6 +33,8 @@ module.exports = {
 
         if (fileName.rowCount > 0) {
           resolve(fileName.rows[0]);
+        } else {
+          reject({ message: "Something went wrong" });
         }
       } catch (error) {
         console.log("error GetFileNameToDownload=====>:", error.message);
@@ -40,12 +42,12 @@ module.exports = {
       }
     });
   },
-  getUserUploadedFiles: async (userId) => {
+  getUserUploadedFiles: async (userId, offset, limit) => {
     return new Promise(async (resolve, reject) => {
       try {
         const result = await db.query(
-          "select * from files where user_id = $1 ",
-          [userId]
+          "SELECT * FROM files WHERE user_id = $1  LIMIT $2 OFFSET $3",
+          [userId, limit, offset]
         );
         if (result.rowCount > 0) {
           resolve(result.rows);
@@ -56,5 +58,18 @@ module.exports = {
         reject(error);
       }
     });
+  },
+  getTotalFileCount: async (userId) => {
+    try {
+      const result = await db.query(
+        "SELECT COUNT(*) FROM files WHERE user_id = $1",
+        [userId]
+      );
+      // Extract the count from the result
+      const totalCount = result.rows[0].count;
+      return totalCount;
+    } catch (error) {
+      throw error;
+    }
   },
 };
