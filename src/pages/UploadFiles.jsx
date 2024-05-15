@@ -46,7 +46,12 @@ const UploadFiles = () => {
           },
         }
       );
-      console.log(upload.status);
+      console.log(upload);
+      if (upload.status === 401) {
+        localStorage.removeItem("file_token");
+        navigate("/sign-in");
+      }
+
       if (upload.status === 200) {
         setUploadFile("");
         setShowProgress(false);
@@ -76,7 +81,7 @@ const UploadFiles = () => {
       setLoading(false);
       console.log(
         "error while uploading file ;===>",
-        error.response?.data?.errorMessage
+        error
       );
     }
   };
