@@ -162,4 +162,58 @@ module.exports = {
       next(errorHandler(501, error.message || "Internal server error"));
     }
   },
+  uploadAudio: async (req, res, next) => {
+    try {
+      const { email, userId } = req.user;
+      const userExists = await verifyUser(email, userId);
+
+      if (userExists.status !== "success") {
+        return res.status(400).json({ message: "Invalid User" });
+      }
+      if (!req.file) {
+        return res.status(501).json({ message: "No file uploaded" });
+      }
+
+      const dateTime = giveCurrentDateTime();
+      const storage = getStorage();
+      const storagePath = `files/${req.file.originalname + email}`;
+
+      const storageRef = ref(storage, storagePath);
+      const metadata = { contentType: req.file.mimetype };
+
+      const snapshot = await uploadBytesResumable(
+        storageRef,
+        req.file.buffer,
+        metadata
+      );
+
+      if (snapshot.state !== "success") {
+        throw new Error("File upload failed");
+      }
+      const firebaseName = req.file.originalname + email;
+      const fileInfo = {
+        originalname: req.file.originalname,
+        filename: req.file.filename || req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        firebaseName,
+        user_id: userId,
+      };
+
+      const result = await AddFiles(fileInfo);
+
+      if (result.status !== 200) {
+        throw new Error("Failed to add file info to database");
+      }
+
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      res
+        .status(200)
+        .json({ message: "success", data: result.data, downloadURL });
+    } catch (error) {
+      console.error("Error in UploadFiles:", error);
+      next(errorHandler(501, error.message || "Internal server error"));
+    }
+  },
 };
