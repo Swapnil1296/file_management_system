@@ -23,14 +23,11 @@ const Table = () => {
     }
   }, [token, page]);
   const getData = (userId) => {
-    console.log("function called");
-
     API({
       method: "GET",
       url: `/file/user-uploaded-files/${userId}/${page}`,
     })
       .then((response) => {
-        console.log(response);
         setGetFiles(response.data.files);
         setTotalPages(response.data.totalPages);
       })
@@ -56,7 +53,7 @@ const Table = () => {
       })
       .catch((error) => console.log("error==>", error.data.errorMessage));
   };
-  console.log(page);
+  
   return (
     <>
       <div className="overflow-x-auto">
