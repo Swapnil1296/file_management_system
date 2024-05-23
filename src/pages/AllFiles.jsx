@@ -1,6 +1,6 @@
 import React from "react";
 import Table from "../components/Table";
-import DataViewer from "../components/DataViewer";
+import PrivateRoute from "../components/PrivateRoute";
 
 const AllFiles = () => {
   return (

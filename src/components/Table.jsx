@@ -5,17 +5,22 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { FaEye } from "react-icons/fa";
 import { MdFileDownload } from "react-icons/md";
 import API from "../Instance/Axios";
+import checkTokenAndNavigate from "../utils/JwtDecode";
 const Table = () => {
   const token = localStorage.getItem("file_token");
-  const [getfiles, setGetFiles] = useState();
+  const [getfiles, setGetFiles] = useState("");
   const [getuserId, setUserId] = useState();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(null);
+  //  const decodedToken = jwtDecode(token);
+  //  console.log("decodedToken:", decodedToken);
   useEffect(() => {
-    // Decode the token to get the user id
     if (token) {
+      checkTokenAndNavigate(token);
       const decodedToken = jwtDecode(token);
+
       const { userId } = decodedToken;
+
       if (userId && userId !== null) {
         setUserId(userId);
         getData(userId);
@@ -53,7 +58,7 @@ const Table = () => {
       })
       .catch((error) => console.log("error==>", error.data.errorMessage));
   };
-  
+
   return (
     <>
       <div className="overflow-x-auto">
@@ -72,7 +77,7 @@ const Table = () => {
               </th>
             </tr>
           </thead>
-          {getfiles &&
+          {getfiles.length > 0 && getfiles ? (
             getfiles.map((item, index) => (
               <tbody
                 key={item.id}
@@ -108,7 +113,10 @@ const Table = () => {
                   </td>
                 </tr>
               </tbody>
-            ))}
+            ))
+          ) : (
+            <div>No data to Show</div>
+          )}
         </table>
       </div>
       <div>
