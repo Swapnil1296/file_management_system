@@ -7,7 +7,9 @@ const verifyToken = (req, res, next) => {
 
   // Check if Authorization header exists
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Unauthorized: No token provided" });
+    return res
+      .status(401)
+      .json({ error: "Unauthorized: No token provided", status: 401 });
   }
 
   // Extract token from the Authorization header
@@ -24,7 +26,9 @@ const verifyToken = (req, res, next) => {
     next();
   } catch (error) {
     // If token is invalid or expired, return a 401 Unauthorized response
-    return res.status(401).json({ error: "Unauthorized: Invalid token" });
+    return res
+      .status(401)
+      .json({ error: "Unauthorized: Invalid token", status: 401 });
   }
 };
 
