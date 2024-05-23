@@ -1,12 +1,26 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import axios from "axios";
 
 const RecordMedia = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
+  const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef(null);
   const token = localStorage.getItem("file_token");
+
+  useEffect(() => {
+    let timer;
+    if (isRecording && !isPaused) {
+      timer = setInterval(() => {
+        setRecordingTime((prevTime) => prevTime + 1);
+      }, 1000);
+    } else {
+      clearInterval(timer);
+    }
+    return () => clearInterval(timer);
+  }, [isRecording, isPaused]);
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -39,7 +53,7 @@ const RecordMedia = () => {
   };
 
   const resumeRecording = () => {
-    if (isRecording) {
+    if (isRecording && isPaused) {
       mediaRecorderRef.current.resume();
       setIsPaused(false);
     }
@@ -49,6 +63,8 @@ const RecordMedia = () => {
     if (isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      setIsPaused(false);
+      setRecordingTime(0); // Reset the recording time
     }
   };
 
@@ -76,8 +92,8 @@ const RecordMedia = () => {
   };
 
   return (
-    <div className="flex flex-col space-y-3 justify-center items-center mt-2">
-      <div className="flex flex-col space-y-3 justify-center mt-2 w-1/2">
+    <div className="flex  space-y-3 justify-center items-center mt-2">
+      <div className="flex flex-wrap space-x-3  justify-center mt-8 w-1/2">
         <button
           className={`px-4 py-2 rounded-full text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-300 ${
             isRecording ? "bg-green-500" : ""
@@ -114,15 +130,34 @@ const RecordMedia = () => {
         >
           Stop Recording
         </button>
+        {isRecording && (
+          <div className="text-white mt-5 bg-blue-500 px-4 py-2 rounded-full relative flex justify-center items-center space-x-2 ">
+            <div className="">Recording: {recordingTime} sec</div>
+            <div>
+              <span className="absolute right-2 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-red-950 rounded-full animate-ping " />
+            </div>
+          </div>
+        )}
         {audioBlob && (
-          <div className="flex justify-center">
-            <audio controls src={URL.createObjectURL(audioBlob)} />
+          <div className="flex justify-center space-x-3 items-center mt-6">
+            <audio
+              className="h-10"
+              controls
+              src={URL.createObjectURL(audioBlob)}
+            />
             <button
-              className="px-4 py-2 rounded-full text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-300"
+              className="px-4 py-2 h-10 rounded-full text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-300"
               onClick={uploadAudio}
               disabled={!audioBlob}
             >
               Upload Audio
+            </button>
+            <button
+              className="px-4 py-2 h-10 rounded-full text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-300"
+              onClick={() => setAudioBlob(null)}
+              disabled={!audioBlob}
+            >
+              Reset
             </button>
           </div>
         )}

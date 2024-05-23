@@ -11,6 +11,7 @@ const Table = () => {
   const [getfiles, setGetFiles] = useState("");
   const [getuserId, setUserId] = useState();
   const [page, setPage] = useState(1);
+  const [userName, setUserName] = useState("");
   const [totalPages, setTotalPages] = useState(null);
   //  const decodedToken = jwtDecode(token);
   //  console.log("decodedToken:", decodedToken);
@@ -34,6 +35,7 @@ const Table = () => {
     })
       .then((response) => {
         setGetFiles(response.data.files);
+        setUserName(response.data.user);
         setTotalPages(response.data.totalPages);
       })
       .catch((error) => console.log("error==>", error.data?.errorMessage));
@@ -66,7 +68,7 @@ const Table = () => {
           <thead className="bg-gray-800 whitespace-nowrap">
             <tr>
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">
-                User Id
+                User Name
               </th>
 
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">
@@ -83,9 +85,10 @@ const Table = () => {
                 key={item.id}
                 className={index % 2 === 0 ? "bg-blue-50" : "bg-blue-100"}
               >
+                {}
                 <tr className="border border-gray-200">
-                  <td className="px-6 py-4 text-sm border border-gray-200">
-                    {item.user_id}
+                  <td className="px-6 py-4 text-sm border border-gray-200 capitalize">
+                    {userName}
                   </td>
 
                   <td className="px-6 py-4 text-sm border border-gray-200">
