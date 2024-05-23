@@ -163,6 +163,7 @@ module.exports = {
     }
   },
   uploadAudio: async (req, res, next) => {
+    console.log(req.file);
     try {
       const { email, userId } = req.user;
       const userExists = await verifyUser(email, userId);
